@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeleniumLoginAutomation", "SeleniumLoginAutomation.csproj", "{1EE1BC04-E695-F3CF-178F-42E4A3650A01}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1EE1BC04-E695-F3CF-178F-42E4A3650A01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EE1BC04-E695-F3CF-178F-42E4A3650A01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EE1BC04-E695-F3CF-178F-42E4A3650A01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EE1BC04-E695-F3CF-178F-42E4A3650A01}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85AEF2E7-6D36-4678-A477-13F7C91A9506}
+	EndGlobalSection
+EndGlobal
