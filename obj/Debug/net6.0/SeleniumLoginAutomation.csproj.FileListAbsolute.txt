@@ -24,3 +24,4 @@ C:\Users\Emilio\Desktop\selenium\obj\Debug\net6.0\refint\SeleniumLoginAutomation
 C:\Users\Emilio\Desktop\selenium\obj\Debug\net6.0\SeleniumLoginAutomation.pdb
 C:\Users\Emilio\Desktop\selenium\obj\Debug\net6.0\SeleniumLoginAutomation.genruntimeconfig.cache
 C:\Users\Emilio\Desktop\selenium\obj\Debug\net6.0\ref\SeleniumLoginAutomation.dll
+C:\Users\Emilio\Desktop\selenium\obj\Debug\net6.0\SeleniumLoginAutomation.sourcelink.json
