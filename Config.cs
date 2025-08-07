@@ -15,6 +15,12 @@ namespace SeleniumLoginAutomation
         public const int VERIFICATION_DELAY = 2000; // milisegundos
         public const int FINAL_DELAY = 3000; // milisegundos
         
+        // Configuración de reportes
+        public const string REPORT_FOLDER = "TestReports";
+        public const string SCREENSHOTS_FOLDER = "Screenshots";
+        public const bool TAKE_SCREENSHOTS = true;
+        public const bool GENERATE_HTML_REPORT = true;
+        
         // Selectores CSS para campos de login (en orden de prioridad)
         public static readonly string[] USERNAME_SELECTORS = 
         {

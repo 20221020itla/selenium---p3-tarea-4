@@ -1,6 +1,14 @@
 # Selenium Login Automation
 
-Este proyecto automatiza el proceso de login en una página web usando Selenium WebDriver con C#.
+Este proyecto automatiza el proceso de login en una página web usando Selenium WebDriver con C# y genera reportes HTML detallados con capturas de pantalla.
+
+## 🆕 Nuevas Características
+
+- **📄 Reportes HTML profesionales** con diseño responsivo
+- **📸 Capturas de pantalla automáticas** en cada paso
+- **📊 Métricas de rendimiento** y estadísticas
+- **🎯 Detección automática de errores** 
+- **⏱️ Timeline detallado** de ejecución
 
 ## Requisitos
 
@@ -63,13 +71,40 @@ El automatizador está optimizado para el siguiente formulario HTML:
 
 El script realiza las siguientes acciones:
 
-1. **Inicializa el navegador Chrome** con configuraciones optimizadas
-2. **Navega a la URL especificada** (`http://127.0.0.1:5500/index.html`)
-3. **Busca automáticamente los campos de login** usando múltiples selectores CSS
-4. **Completa el formulario** con las credenciales especificadas
-5. **Envía el formulario** haciendo clic en el botón de submit o presionando Enter
-6. **Verifica el éxito del login** buscando indicadores comunes
-7. **Cierra el navegador** al finalizar
+1. **📊 Inicia el sistema de reportes** y crea las carpetas necesarias
+2. **🚀 Inicializa el navegador Chrome** con configuraciones optimizadas
+3. **🌐 Navega a la URL especificada** (`http://localhost:5173/`)
+4. **🔍 Busca automáticamente los campos de login** usando múltiples selectores CSS
+5. **✍️ Completa el formulario** con las credenciales especificadas
+6. **🖱️ Envía el formulario** haciendo clic en el botón de submit o presionando Enter
+7. **⏳ Maneja estados de carga** esperando que desaparezca "Iniciando sesión..."
+8. **🚨 Detecta errores automáticamente** buscando mensajes de error en la página
+9. **✅ Verifica el éxito del login** buscando indicadores comunes
+10. **📸 Toma capturas de pantalla** en cada paso importante
+11. **📄 Genera reporte HTML** con timeline completo y métricas
+12. **🔒 Cierra el navegador** al finalizar
+
+## 📁 Archivos Generados
+
+Después de cada ejecución se crean:
+
+```
+TestReports/
+├── test_report_YYYYMMDD_HHMMSS.html    # Reporte principal
+└── Screenshots/                         # Capturas de pantalla
+    ├── step_01_Configurando_opciones_YYYYMMDD_HHMMSS.png
+    ├── step_02_Navegando_a_URL_YYYYMMDD_HHMMSS.png
+    └── ... (una por cada paso)
+```
+
+## 🎨 Características del Reporte
+
+- **Diseño responsivo** que funciona en móviles y desktop
+- **Timeline visual** con iconos de éxito/error
+- **Capturas clickeables** que se abren en modal
+- **Métricas de tiempo** para cada paso
+- **Resumen ejecutivo** con estadísticas
+- **Detección automática** de errores y warnings
 
 ## Características destacadas
 
@@ -105,7 +140,36 @@ Para adaptar el script a una página diferente:
 
 ```
 SeleniumLoginAutomation/
-├── Program.cs                          # Código principal
+├── Program.cs                          # Código principal con lógica de automatización
+├── Config.cs                           # Configuración y selectores CSS/XPath  
+├── TestReport.cs                       # Sistema de reportes y capturas
 ├── SeleniumLoginAutomation.csproj      # Configuración del proyecto
-└── README.md                           # Este archivo
+├── README.md                           # Documentación principal
+├── NUEVAS_CARACTERISTICAS.md           # Guía de nuevas funciones
+├── run.bat                             # Script para Windows
+├── run.ps1                             # Script PowerShell
+└── TestReports/                        # Reportes generados (se crea automáticamente)
+    ├── test_report_*.html              # Reportes HTML
+    └── Screenshots/                    # Capturas de pantalla
+        └── step_*.png
+```
+
+## ⚙️ Configuración Avanzada
+
+En `Config.cs` puedes personalizar:
+
+```csharp
+// Reportes y capturas
+public const bool TAKE_SCREENSHOTS = true;         // Activar capturas
+public const bool GENERATE_HTML_REPORT = true;     // Generar reporte HTML
+public const string REPORT_FOLDER = "TestReports"; // Carpeta de reportes
+
+// Credenciales y URL
+public const string LOGIN_URL = "http://localhost:5173/";
+public const string USERNAME = "davila@gmail.com";
+public const string PASSWORD = "12345";
+
+// Timeouts
+public const int IMPLICIT_WAIT_TIMEOUT = 10;       // Espera implícita
+public const int EXPLICIT_WAIT_TIMEOUT = 10;       # Espera explícita
 ```
