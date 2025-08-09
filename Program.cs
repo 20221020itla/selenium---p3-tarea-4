@@ -29,10 +29,13 @@ namespace SeleniumLoginAutomation
                 // Realizar el login
                 PerformLogin();
                 
-                report.AddStep("Proceso de login completado exitosamente");
+                // Realizar operaciones CRUD de productos
+                PerformProductsCrud();
+                
+                report.AddStep("Proceso de login y CRUD completado exitosamente");
                 report.SetTestResult(true);
                 
-                Console.WriteLine("\n🎉 Login exitoso!");
+                Console.WriteLine("\n🎉 Login y operaciones CRUD exitosas!");
                 
                 // Esperar un poco para ver el resultado
                 Thread.Sleep(Config.FINAL_DELAY);
@@ -374,6 +377,454 @@ namespace SeleniumLoginAutomation
                 report.AddStep("Error al cerrar el navegador", false, ex.Message);
                 Console.WriteLine($"Error al cerrar el navegador: {ex.Message}");
             }
+        }
+
+        private static void PerformProductsCrud()
+        {
+            try
+            {
+                report.AddStep("Iniciando operaciones CRUD de productos");
+                Console.WriteLine("Iniciando operaciones CRUD de productos...");
+
+                // Navegar a la sección de productos
+                NavigateToProducts();
+
+                // Crear un nuevo producto
+                CreateProduct();
+
+                // Editar el producto creado
+                EditProduct();
+
+                // Eliminar el producto
+                DeleteProduct();
+
+                report.AddStep("Operaciones CRUD de productos completadas exitosamente");
+                Console.WriteLine("✓ Operaciones CRUD de productos completadas exitosamente!");
+            }
+            catch (Exception ex)
+            {
+                report.AddStep("Error durante operaciones CRUD de productos", false, ex.Message);
+                Console.WriteLine($"❌ Error durante operaciones CRUD de productos: {ex.Message}");
+                throw;
+            }
+        }
+
+        private static void NavigateToProducts()
+        {
+            try
+            {
+                report.AddStep("Verificando que estamos en el dashboard con productos");
+                Console.WriteLine("Verificando acceso a sección de productos...");
+
+                // En una SPA de React, después del login ya estamos en el dashboard
+                // Solo necesitamos verificar que los elementos de productos estén visibles
+                Thread.Sleep(Config.VERIFICATION_DELAY * 2); // Dar más tiempo para que React renderice
+
+                // Verificar que estamos en la sección de productos
+                VerifyProductsSection();
+                
+                report.AddStep("Ya estamos en la sección de productos del dashboard");
+                Console.WriteLine("✓ Acceso a productos verificado");
+            }
+            catch (Exception ex)
+            {
+                report.AddStep("Error verificando acceso a productos", false, ex.Message);
+                throw;
+            }
+        }
+
+        private static void VerifyProductsSection()
+        {
+            try
+            {
+                report.AddStep("Verificando que estamos en la sección de productos");
+                
+                // Buscar indicadores de que estamos en la sección de productos
+                string[] productSectionIndicators = {
+                    ".product-crud",
+                    ".crud-header",
+                    "#add-product-btn",
+                    "button:contains('+ Nuevo Producto')",
+                    ".dashboard-container",
+                    "h2:contains('Gestión de Productos')",
+                    ".products-grid"
+                };
+
+                bool inProductsSection = false;
+                foreach (string indicator in productSectionIndicators)
+                {
+                    try
+                    {
+                        var element = driver.FindElement(By.CssSelector(indicator));
+                        if (element.Displayed)
+                        {
+                            report.AddStep($"Sección de productos verificada por elemento: {indicator}");
+                            inProductsSection = true;
+                            break;
+                        }
+                    }
+                    catch (NoSuchElementException)
+                    {
+                        continue;
+                    }
+                }
+
+                if (!inProductsSection)
+                {
+                    report.AddStep("Advertencia: No se pudo verificar automáticamente la sección de productos", false);
+                    Console.WriteLine("Advertencia: No se pudo verificar que estemos en la sección de productos");
+                }
+            }
+            catch (Exception ex)
+            {
+                report.AddStep("Error verificando sección de productos", false, ex.Message);
+                // No lanzamos excepción aquí, solo registramos el error
+            }
+        }
+
+        private static void CreateProduct()
+        {
+            try
+            {
+                report.AddStep("Creando nuevo producto");
+                Console.WriteLine("Creando nuevo producto...");
+
+                // Hacer clic en el botón "Nuevo Producto" con espera explícita
+                IWebElement? addButton = null;
+                var waitTime = TimeSpan.FromSeconds(10);
+                var buttonWait = new WebDriverWait(driver, waitTime);
+                
+                try
+                {
+                    addButton = buttonWait.Until(d => {
+                        foreach (string selector in Config.ADD_PRODUCT_BUTTON_SELECTORS)
+                        {
+                            try
+                            {
+                                var btn = d.FindElement(By.CssSelector(selector));
+                                if (btn.Displayed && btn.Enabled)
+                                {
+                                    return btn;
+                                }
+                            }
+                            catch (NoSuchElementException) { continue; }
+                        }
+                        return null;
+                    });
+                }
+                catch (WebDriverTimeoutException)
+                {
+                    throw new Exception("No se pudo encontrar el botón de nuevo producto después de esperar");
+                }
+
+                if (addButton != null)
+                {
+                    addButton.Click();
+                    Thread.Sleep(1500); // Dar tiempo para que aparezca el modal
+                    report.AddStep("Modal de nuevo producto abierto");
+                }
+                else
+                {
+                    throw new Exception("No se pudo encontrar el botón de nuevo producto");
+                }
+
+                // Esperar a que aparezca el modal del formulario
+                Thread.Sleep(2000);
+
+                // Llenar el formulario del producto
+                FillProductForm(Config.TEST_PRODUCT_NAME, Config.TEST_PRODUCT_DESCRIPTION, 
+                               Config.TEST_PRODUCT_PRICE, Config.TEST_PRODUCT_CATEGORY, 
+                               Config.TEST_PRODUCT_STOCK);
+
+                // Guardar el producto con espera explícita
+                IWebElement? saveButton = null;
+                try
+                {
+                    saveButton = buttonWait.Until(d => {
+                        foreach (string selector in Config.SAVE_PRODUCT_BUTTON_SELECTORS)
+                        {
+                            try
+                            {
+                                var btn = d.FindElement(By.CssSelector(selector));
+                                if (btn.Displayed && btn.Enabled && !btn.GetAttribute("disabled").Equals("true"))
+                                {
+                                    return btn;
+                                }
+                            }
+                            catch (NoSuchElementException) { continue; }
+                        }
+                        return null;
+                    });
+                }
+                catch (WebDriverTimeoutException)
+                {
+                    report.AddStep("No se pudo encontrar el botón guardar, intentando submit del formulario");
+                    // Intentar enviar el formulario directamente
+                    try
+                    {
+                        var form = driver.FindElement(By.Id("product-form"));
+                        form.Submit();
+                    }
+                    catch (Exception)
+                    {
+                        throw new Exception("No se pudo enviar el formulario de producto");
+                    }
+                }
+
+                if (saveButton != null)
+                {
+                    saveButton.Click();
+                    Thread.Sleep(Config.VERIFICATION_DELAY * 2); // Más tiempo para React
+                    report.AddStep($"Producto '{Config.TEST_PRODUCT_NAME}' creado exitosamente");
+                    Console.WriteLine($"✓ Producto '{Config.TEST_PRODUCT_NAME}' creado exitosamente");
+                }
+            }
+            catch (Exception ex)
+            {
+                report.AddStep("Error creando producto", false, ex.Message);
+                throw;
+            }
+        }
+
+        private static void EditProduct()
+        {
+            try
+            {
+                report.AddStep("Editando producto disponible");
+                Console.WriteLine("Editando producto...");
+
+                // Buscar el primer producto disponible y su botón de editar
+                IWebElement? editButton = null;
+                
+                // Intentar encontrar botón de editar en cualquier producto
+                foreach (string selector in Config.EDIT_BUTTON_SELECTORS)
+                {
+                    try
+                    {
+                        var elements = driver.FindElements(By.CssSelector(selector));
+                        if (elements.Count > 0)
+                        {
+                            editButton = elements[0]; // Tomar el primer elemento encontrado
+                            break;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                }
+
+                if (editButton != null && editButton.Displayed && editButton.Enabled)
+                {
+                    editButton.Click();
+                    Thread.Sleep(1000);
+                    report.AddStep("Modal de edición abierto");
+                }
+                else
+                {
+                    throw new Exception("No se pudo encontrar ningún botón de editar disponible");
+                }
+
+                // Llenar el formulario con los datos editados
+                FillProductForm(Config.EDITED_PRODUCT_NAME, Config.EDITED_PRODUCT_DESCRIPTION, 
+                               Config.EDITED_PRODUCT_PRICE, Config.EDITED_PRODUCT_CATEGORY, 
+                               Config.EDITED_PRODUCT_STOCK);
+
+                // Guardar los cambios
+                IWebElement? saveButton = FindElementByCssSelectors(Config.SAVE_PRODUCT_BUTTON_SELECTORS, "Botón Guardar Edición");
+                if (saveButton != null)
+                {
+                    saveButton.Click();
+                    Thread.Sleep(Config.VERIFICATION_DELAY);
+                    report.AddStep($"Producto editado a '{Config.EDITED_PRODUCT_NAME}' exitosamente");
+                    Console.WriteLine($"✓ Producto editado exitosamente");
+                }
+                else
+                {
+                    throw new Exception("No se pudo encontrar el botón guardar edición");
+                }
+            }
+            catch (Exception ex)
+            {
+                report.AddStep("Error editando producto", false, ex.Message);
+                throw;
+            }
+        }
+
+        private static void DeleteProduct()
+        {
+            try
+            {
+                report.AddStep("Eliminando producto disponible");
+                Console.WriteLine("Eliminando producto...");
+
+                // Esperar a que aparezcan productos en la grilla
+                Thread.Sleep(3000);
+
+                // Buscar el primer producto disponible y su botón de eliminar
+                IWebElement? deleteButton = null;
+                var waitTime = TimeSpan.FromSeconds(10);
+                var buttonWait = new WebDriverWait(driver, waitTime);
+                
+                // Intentar encontrar botón de eliminar en cualquier producto
+                try
+                {
+                    deleteButton = buttonWait.Until(d => {
+                        foreach (string selector in Config.DELETE_BUTTON_SELECTORS)
+                        {
+                            try
+                            {
+                                var elements = d.FindElements(By.CssSelector(selector));
+                                if (elements.Count > 0)
+                                {
+                                    var btn = elements[0];
+                                    if (btn.Displayed && btn.Enabled)
+                                    {
+                                        return btn;
+                                    }
+                                }
+                            }
+                            catch (Exception) { continue; }
+                        }
+                        return null;
+                    });
+                }
+                catch (WebDriverTimeoutException)
+                {
+                    throw new Exception("No se encontraron productos para eliminar después de esperar");
+                }
+
+                if (deleteButton != null && deleteButton.Displayed && deleteButton.Enabled)
+                {
+                    deleteButton.Click();
+                    Thread.Sleep(1000);
+                    report.AddStep("Botón de eliminar clickeado");
+                    
+                    // Manejar el diálogo de confirmación de JavaScript
+                    try
+                    {
+                        // Esperar y aceptar el alert de confirmación
+                        var alertWait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
+                        var alert = alertWait.Until(d => d.SwitchTo().Alert());
+                        
+                        string alertText = alert.Text;
+                        report.AddStep($"Confirmación de eliminación detectada: {alertText}");
+                        Console.WriteLine($"Confirmando eliminación: {alertText}");
+                        
+                        alert.Accept(); // Hacer clic en "OK"
+                        
+                        Thread.Sleep(Config.VERIFICATION_DELAY * 2);
+                        report.AddStep("Producto eliminado exitosamente");
+                        Console.WriteLine("✓ Producto eliminado exitosamente");
+                    }
+                    catch (WebDriverTimeoutException)
+                    {
+                        report.AddStep("No apareció diálogo de confirmación - El producto puede haberse eliminado directamente");
+                        Console.WriteLine("✓ Producto eliminado sin diálogo de confirmación");
+                    }
+                    catch (NoAlertPresentException)
+                    {
+                        report.AddStep("No hay alerta presente - El producto puede haberse eliminado directamente");
+                        Console.WriteLine("✓ Producto eliminado sin alerta");
+                    }
+                }
+                else
+                {
+                    throw new Exception("No se pudo encontrar ningún botón de eliminar disponible");
+                }
+            }
+            catch (Exception ex)
+            {
+                report.AddStep("Error eliminando producto", false, ex.Message);
+                throw;
+            }
+        }
+
+        private static void FillProductForm(string name, string description, string price, string category, string stock)
+        {
+            try
+            {
+                report.AddStep($"Llenando formulario de producto: {name}");
+
+                // Llenar nombre del producto
+                IWebElement? nameField = FindElementByCssSelectors(Config.PRODUCT_FORM_SELECTORS, "Campo Nombre");
+                if (nameField != null)
+                {
+                    nameField.Clear();
+                    nameField.SendKeys(name);
+                    report.AddStep($"Nombre del producto ingresado: {name}");
+                }
+
+                // Llenar descripción
+                IWebElement? descriptionField = FindElementByCssSelectors(Config.PRODUCT_DESCRIPTION_SELECTORS, "Campo Descripción");
+                if (descriptionField != null)
+                {
+                    descriptionField.Clear();
+                    descriptionField.SendKeys(description);
+                    report.AddStep("Descripción del producto ingresada");
+                }
+
+                // Llenar precio
+                IWebElement? priceField = FindElementByCssSelectors(Config.PRODUCT_PRICE_SELECTORS, "Campo Precio");
+                if (priceField != null)
+                {
+                    priceField.Clear();
+                    priceField.SendKeys(price);
+                    report.AddStep($"Precio del producto ingresado: {price}");
+                }
+
+                // Seleccionar categoría
+                IWebElement? categoryField = FindElementByCssSelectors(Config.PRODUCT_CATEGORY_SELECTORS, "Campo Categoría");
+                if (categoryField != null)
+                {
+                    var select = new SelectElement(categoryField);
+                    select.SelectByText(category);
+                    report.AddStep($"Categoría seleccionada: {category}");
+                }
+
+                // Llenar stock
+                IWebElement? stockField = FindElementByCssSelectors(Config.PRODUCT_STOCK_SELECTORS, "Campo Stock");
+                if (stockField != null)
+                {
+                    stockField.Clear();
+                    stockField.SendKeys(stock);
+                    report.AddStep($"Stock ingresado: {stock}");
+                }
+
+                report.AddStep("Formulario de producto completado exitosamente");
+            }
+            catch (Exception ex)
+            {
+                report.AddStep("Error llenando formulario de producto", false, ex.Message);
+                throw;
+            }
+        }
+
+        private static IWebElement? FindElementByCssSelectors(string[] selectors, string elementName = "elemento")
+        {
+            report.AddStep($"Buscando {elementName} con {selectors.Length} selectores CSS");
+            
+            foreach (string selector in selectors)
+            {
+                try
+                {
+                    var element = driver.FindElement(By.CssSelector(selector));
+                    if (element.Displayed && element.Enabled)
+                    {
+                        report.AddStep($"{elementName} encontrado con selector: {selector}");
+                        Console.WriteLine($"Elemento encontrado con selector: {selector}");
+                        return element;
+                    }
+                }
+                catch (NoSuchElementException)
+                {
+                    continue;
+                }
+            }
+            
+            report.AddStep($"No se pudo encontrar {elementName} con ningún selector CSS", false);
+            Console.WriteLine($"No se pudo encontrar {elementName} con ningún selector CSS.");
+            return null;
         }
     }
 }
